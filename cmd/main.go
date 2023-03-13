@@ -1,7 +1,10 @@
 package main
 
 import (
+	"chatemotes/internal/api/emotes"
 	"chatemotes/internal/api/hash"
+	"chatemotes/internal/api/pack"
+	"chatemotes/internal/database"
 	"chatemotes/internal/resourcepack"
 	"chatemotes/internal/services"
 
@@ -10,11 +13,21 @@ import (
 
 func main() {
 	app := fiber.New()
+	database := database.New()
+	resourcepack := resourcepack.New(database)
+
+	// resourcepack.AddEmote("test")
+	// resourcepack.AddEmote("test2")
+	// resourcepack.AddEmote("hello")
+
 	services := &services.Services{
-		ResoucePack: resourcepack.New(),
+		ResoucePack: resourcepack,
+		Database:    database,
 	}
 
 	hash.NewRoute(app, services)
+	emotes.NewRoute(app, services)
+	pack.NewRoute(app)
 
 	app.Listen(":3000")
 }

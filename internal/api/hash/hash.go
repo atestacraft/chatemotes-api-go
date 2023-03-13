@@ -10,8 +10,8 @@ type Response struct {
 	Hash string `json:"hash"`
 }
 
-func NewRoute(server fiber.Router, services *services.Services) {
-	server.Get("/hash", func(c *fiber.Ctx) error {
+func NewRoute(app fiber.Router, services *services.Services) {
+	app.Get("/hash", func(c *fiber.Ctx) error {
 		response := &Response{
 			Hash: services.ResoucePack.GetHash(),
 		}

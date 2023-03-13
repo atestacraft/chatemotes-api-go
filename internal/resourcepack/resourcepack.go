@@ -8,53 +8,75 @@ import (
 	"io"
 	"log"
 	"os"
+	"path"
+	"strings"
+
+	"github.com/sonyarouje/simdb"
 )
+
+type Emote struct {
+	Name   string   `json:"name"`
+	Type   string   `json:"type"`
+	File   string   `json:"file"`
+	Height int      `json:"height"`
+	Ascent int      `json:"ascent"`
+	Chars  []string `json:"chars"`
+}
+
+func (c Emote) ID() (jsonField string, value interface{}) {
+	value = c.File
+	jsonField = "file"
+	return
+}
 
 type ResourcePackMeta struct {
 	Description string `json:"description"`
 	PackFormat  int    `json:"pack_format"`
 }
 
-type ResourcePack struct {
+type McMeta struct {
 	Pack ResourcePackMeta `json:"pack"`
 }
 
-type Resourcepack struct {
+type ResourcePack struct {
+	database         *simdb.Driver
 	ResourcePackFile *os.File
-	ZipWriter        *zip.Writer
 }
 
-func New() *Resourcepack {
-	resoucePackFile, err := os.OpenFile("resourcepack.zip", os.O_CREATE|os.O_RDWR, 0755)
+func New(database *simdb.Driver) *ResourcePack {
+	if _, err := os.Stat("pack"); os.IsNotExist(err) {
+		os.Mkdir("pack", 0755)
+	}
+
+	resoucePackFile, err := os.OpenFile(path.Join("pack", "resourcepack.zip"), os.O_CREATE|os.O_RDWR, 0755)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	zipWriter := zip.NewWriter(resoucePackFile)
-
-	resoucePack := &Resourcepack{
+	resoucePack := &ResourcePack{
+		database:         database,
 		ResourcePackFile: resoucePackFile,
-		ZipWriter:        zipWriter,
+	}
+
+	fileStat, err := resoucePackFile.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if fileStat.Size() == 0 {
+		resoucePack.addMetadata()
 	}
 
 	return resoucePack
 }
 
-func (r *Resourcepack) GetHash() string {
-	hash := sha256.New()
-	_, err := io.Copy(hash, r.ResourcePackFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return fmt.Sprintf("%x", hash.Sum(nil))
+func (r *ResourcePack) createWriter() *zip.Writer {
+	return zip.NewWriter(r.ResourcePackFile)
 }
 
-func (r *Resourcepack) AddEmote() {
-}
-
-func (r *Resourcepack) AddMetadata() {
-	file, err := r.ZipWriter.Create("pack.mcmeta")
+func (r *ResourcePack) addMetadata() {
+	writer := r.createWriter()
+	file, err := writer.Create("pack.mcmeta")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -71,15 +93,70 @@ func (r *Resourcepack) AddMetadata() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	writer.Close()
 }
 
-func (r *Resourcepack) WriteResoucePack() {
-	err := r.ZipWriter.Close()
+func (r *ResourcePack) GetHash() string {
+	hash := sha256.New()
+	_, err := io.Copy(hash, r.ResourcePackFile)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	return fmt.Sprintf("%x", hash.Sum(nil))
 }
 
-func (r *Resourcepack) ReadResoucePack() {
+func (r *ResourcePack) AddEmote( /*emoteImage []byte,*/ name string) {
+	emote := &Emote{
+		Name:   name,
+		Type:   "bitmap",
+		File:   fmt.Sprintf("minecraft:font/%s.png", name),
+		Height: 10,
+		Ascent: 7,
+		Chars:  []string{"🤙"},
+	}
 
+	err := r.database.Insert(emote)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// writer := r.createWriter()
+	// file, err := writer.Create(fmt.Sprintf("assets/minecraft/textures/font/%s.png", name))
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// _, err = file.Write(emoteImage)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// writer.Close()
+}
+
+func (r *ResourcePack) GetEmotes() []Emote {
+	var fetchedEmotes []Emote
+	err := r.database.
+		Open(Emote{}).
+		Get().
+		AsEntity(&fetchedEmotes)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return fetchedEmotes
+}
+
+func (r *ResourcePack) GetEmoteByName(name string) (Emote, error) {
+	var fetchedEmote Emote
+	err := r.database.
+		Open(Emote{}).
+		Where("name", "=", strings.ToLower(name)).
+		First().
+		AsEntity(&fetchedEmote)
+
+	return fetchedEmote, err
 }
