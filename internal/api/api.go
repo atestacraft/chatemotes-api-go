@@ -99,7 +99,7 @@ func setEmoteRoutes(app fiber.Router, logic logic.Logic) {
 	})
 }
 
-func New(logic logic.Logic) *fiber.App {
+func New(packFilename string, logic logic.Logic) *fiber.App {
 	app := fiber.New()
 	app.Use(logger.New())
 
@@ -112,16 +112,8 @@ func New(logic logic.Logic) *fiber.App {
 		})
 	})
 	setEmoteRoutes(app, logic)
-	app.Static("/pack", "./pack", fiber.Static{
-		Index:          "resourcepack.zip",
-		Download:       true,
-		Compress:       false,
-		ByteRange:      false,
-		Browse:         false,
-		CacheDuration:  0,
-		MaxAge:         0,
-		ModifyResponse: nil,
-		Next:           nil,
+	app.Get("/pack", func(c *fiber.Ctx) error {
+		return c.Download(packFilename)
 	})
 
 	return app

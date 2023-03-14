@@ -8,10 +8,12 @@ import (
 	"chatemotes/internal/logic"
 )
 
+var _packFilename = "./pack/resourcepack.zip"
+
 func run() error {
 	database := database.New()
-	logic := logic.New(database)
-	return api.New(logic).Listen(":3000")
+	logic := logic.New(_packFilename, database)
+	return api.New(_packFilename, logic).Listen(":3000")
 }
 
 func main() {
