@@ -18,15 +18,6 @@ import (
 	"chatemotes/internal/emote_resolver"
 )
 
-type ResourcePackMeta struct {
-	Description string `json:"description"`
-	PackFormat  int    `json:"pack_format"`
-}
-
-type McMeta struct {
-	Pack ResourcePackMeta `json:"pack"`
-}
-
 type Logic struct {
 	database         database.DB
 	ResourcePackFile *os.File
@@ -65,6 +56,23 @@ func (r *Logic) createWriter() *zip.Writer {
 	return zip.NewWriter(r.ResourcePackFile)
 }
 
+var metadataBytes = getMetadataBytes()
+
+func getMetadataBytes() []byte {
+	type metadata struct {
+		Description string `json:"description"`
+		PackFormat  int    `json:"pack_format"`
+	}
+	bytes, err := json.Marshal(metadata{
+		Description: "Chat Emotes",
+		PackFormat:  9,
+	})
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return bytes
+}
+
 func (r *Logic) addMetadata() {
 	writer := r.createWriter()
 	defer writer.Close()
@@ -74,15 +82,7 @@ func (r *Logic) addMetadata() {
 		log.Fatal(err.Error())
 	}
 
-	bytes, err := json.Marshal(&ResourcePackMeta{
-		Description: "Chat Emotes",
-		PackFormat:  9,
-	})
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	_, err = file.Write(bytes)
+	_, err = file.Write(metadataBytes)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
