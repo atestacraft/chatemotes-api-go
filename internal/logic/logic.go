@@ -12,7 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/rprtr258/xerr"
@@ -58,7 +58,7 @@ func New(database *simdb.Driver) Logic {
 		}
 	}
 
-	resoucePackFile, err := os.OpenFile(path.Join("pack", "resourcepack.zip"), os.O_CREATE|os.O_RDWR, 0755)
+	resoucePackFile, err := os.OpenFile(filepath.Join("pack", "resourcepack.zip"), os.O_CREATE|os.O_RDWR, 0755)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
