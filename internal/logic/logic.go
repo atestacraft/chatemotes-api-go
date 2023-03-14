@@ -107,13 +107,13 @@ func downloadImage(url string) ([]byte, error) {
 
 	response, err := http.Get(url)
 	if err != nil {
-		return nil, err
+		return nil, xerr.NewW(err)
 	}
 	defer response.Body.Close()
 
 	bytes, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, err
+		return nil, xerr.NewW(err)
 	}
 
 	return bytes, nil
