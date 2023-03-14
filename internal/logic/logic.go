@@ -119,6 +119,22 @@ func downloadImage(url string) ([]byte, error) {
 	return bytes, nil
 }
 
+func (r *Logic) addFile(name string, data []byte) error {
+	writer := r.createWriter()
+	defer writer.Close()
+
+	file, err := writer.Create(name)
+	if err != nil {
+		return xerr.NewW(err)
+	}
+
+	if _, err = file.Write(data); err != nil {
+		return xerr.NewW(err)
+	}
+
+	return nil
+}
+
 func webpToPng(b []byte) ([]byte, error) {
 	decoder, err := webp.NewAnimationDecoder(b)
 	if err != nil {
@@ -140,17 +156,6 @@ func webpToPng(b []byte) ([]byte, error) {
 }
 
 func (r *Logic) AddEmote(url string, name string) (*database.Emote, error) {
-	writer := r.createWriter()
-	defer writer.Close()
-
-	file, err := writer.Create(fmt.Sprintf(
-		"assets/minecraft/textures/font/%s.png",
-		name,
-	))
-	if err != nil {
-		return nil, err
-	}
-
 	imageURL, ok := emote_resolver.EmoteResolver.ResolveUrl(url)
 	if !ok {
 		return nil, errors.New("no match found")
@@ -170,8 +175,11 @@ func (r *Logic) AddEmote(url string, name string) (*database.Emote, error) {
 		)
 	}
 
-	if _, err = file.Write(img); err != nil {
-		return nil, err
+	if err := r.addFile(fmt.Sprintf(
+		"assets/minecraft/textures/font/%s.png",
+		name,
+	), img); err != nil {
+		return nil, xerr.NewWM(err, "failed adding to pack")
 	}
 
 	imageBase64 := base64.StdEncoding.EncodeToString(imageBytes)
