@@ -2,6 +2,7 @@ package resourcepack
 
 import (
 	"archive/zip"
+	emote_resolver "chatemotes/internal/emote"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 
 type Emote struct {
 	Name   string   `json:"name"`
+	Image  string   `json:"image"`
 	Type   string   `json:"type"`
 	File   string   `json:"file"`
 	Height int      `json:"height"`
@@ -40,10 +42,11 @@ type McMeta struct {
 
 type ResourcePack struct {
 	database         *simdb.Driver
+	emoteResolver    *emote_resolver.Resolver
 	ResourcePackFile *os.File
 }
 
-func New(database *simdb.Driver) *ResourcePack {
+func New(database *simdb.Driver, emoteResolver *emote_resolver.Resolver) *ResourcePack {
 	if _, err := os.Stat("pack"); os.IsNotExist(err) {
 		os.Mkdir("pack", 0755)
 	}
@@ -55,6 +58,7 @@ func New(database *simdb.Driver) *ResourcePack {
 
 	resoucePack := &ResourcePack{
 		database:         database,
+		emoteResolver:    emoteResolver,
 		ResourcePackFile: resoucePackFile,
 	}
 
@@ -107,7 +111,7 @@ func (r *ResourcePack) GetHash() string {
 	return fmt.Sprintf("%x", hash.Sum(nil))
 }
 
-func (r *ResourcePack) AddEmote( /*emoteImage []byte,*/ name string) {
+func (r *ResourcePack) AddEmote(url string, name string) (*Emote, error) {
 	emote := &Emote{
 		Name:   name,
 		Type:   "bitmap",
@@ -117,23 +121,36 @@ func (r *ResourcePack) AddEmote( /*emoteImage []byte,*/ name string) {
 		Chars:  []string{"🤙"},
 	}
 
-	err := r.database.Insert(emote)
+	writer := r.createWriter()
+	file, err := writer.Create(fmt.Sprintf("assets/minecraft/textures/font/%s.png", name))
 	if err != nil {
-		log.Fatal(err)
+		return emote, err
 	}
 
-	// writer := r.createWriter()
-	// file, err := writer.Create(fmt.Sprintf("assets/minecraft/textures/font/%s.png", name))
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	emoteUrl, err := r.emoteResolver.ResolveUrl(url)
+	if err != nil {
+		return emote, err
+	}
 
-	// _, err = file.Write(emoteImage)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	emoteBase64, err := r.emoteResolver.FetchEmoteImage(emoteUrl)
+	if err != nil {
+		return emote, err
+	}
 
-	// writer.Close()
+	emote.Image = emoteBase64
+
+	_, err = file.Write([]byte(emoteBase64))
+	if err != nil {
+		return emote, err
+	}
+
+	if r.database.Insert(emote); err != nil {
+		return emote, err
+	}
+
+	writer.Close()
+
+	return emote, nil
 }
 
 func (r *ResourcePack) GetEmotes() []Emote {
@@ -159,4 +176,24 @@ func (r *ResourcePack) GetEmoteByName(name string) (Emote, error) {
 		AsEntity(&fetchedEmote)
 
 	return fetchedEmote, err
+}
+
+func (r *ResourcePack) RemoveEmoteByName(name string) error {
+	emote := Emote{Name: name}
+	err := r.database.
+		Open(Emote{}).
+		Where("name", "=", strings.ToLower(name)).
+		Delete(&emote)
+
+	return err
+}
+
+func (r *ResourcePack) UpdateEmote(url string, name string) (Emote, error) {
+	emote := Emote{Name: name}
+	err := r.database.
+		Open(Emote{}).
+		Where("name", "=", strings.ToLower(name)).
+		Update(&emote)
+
+	return emote, err
 }

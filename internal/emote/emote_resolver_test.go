@@ -14,11 +14,11 @@ func TestSevenTv(t *testing.T) {
 
 	url1, err := emoteResolver.ResolveUrl("https://7tv.app/emotes/60ae958e229664e8667aea38")
 	assert.NoError(err)
-	assert.Equal(url1, "https://cdn.7tv.app/emote/60ae958e229664e8667aea38/2x")
+	assert.Equal(url1, "https://cdn.7tv.app/emote/60ae958e229664e8667aea38/2x.webp")
 
 	url2, err := emoteResolver.ResolveUrl("https://cdn.7tv.app/emote/60ae958e229664e8667aea38/4x.webp")
 	assert.NoError(err)
-	assert.Equal(url2, "https://cdn.7tv.app/emote/60ae958e229664e8667aea38/2x")
+	assert.Equal(url2, "https://cdn.7tv.app/emote/60ae958e229664e8667aea38/2x.webp")
 }
 
 func TestBetterTv(t *testing.T) {

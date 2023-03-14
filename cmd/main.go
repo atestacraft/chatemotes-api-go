@@ -15,8 +15,8 @@ import (
 func main() {
 	app := fiber.New()
 	database := database.New()
-	resourcepack := resourcepack.New(database)
 	emoteResolver := emote_resolver.New()
+	resourcepack := resourcepack.New(database, emoteResolver)
 
 	services := &services.Services{
 		ResoucePack:   resourcepack,

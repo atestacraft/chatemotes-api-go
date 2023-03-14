@@ -1,8 +1,11 @@
 package emote_resolver
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"regexp"
 )
 
@@ -21,14 +24,14 @@ func New() *Resolver {
 			matchUrl: func(url string) (string, string) {
 				r := regexp.MustCompile(`^https://7tv.app/emotes/(\w+)$`)
 				matches := getUrlMatches(url, r, 1)
-				return fmt.Sprintf("https://cdn.7tv.app/emote/%s/2x", matches), matches
+				return fmt.Sprintf("https://cdn.7tv.app/emote/%s/2x.webp", matches), matches
 			},
 		},
 		{
 			matchUrl: func(url string) (string, string) {
 				r := regexp.MustCompile(`^https://cdn.7tv.app/emote/(\w+)`)
 				matches := getUrlMatches(url, r, 0)
-				return fmt.Sprintf("%s/2x", matches), matches
+				return fmt.Sprintf("%s/2x.webp", matches), matches
 			},
 		},
 		// bttv
@@ -89,4 +92,25 @@ func (r *Resolver) ResolveUrl(url string) (string, error) {
 	}
 
 	return "", errors.New("no match found")
+}
+
+func (r *Resolver) FetchEmoteImage(url string) (string, error) {
+	fmt.Println(url)
+	response, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+
+	defer response.Body.Close()
+
+	bytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var base64Encoding string
+	base64Encoding += "data:image/png;base64,"
+	base64Encoding += base64.StdEncoding.EncodeToString(bytes)
+
+	return base64Encoding, err
 }
