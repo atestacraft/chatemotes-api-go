@@ -5,6 +5,7 @@ import (
 	emote_resolver "chatemotes/internal/emote"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -107,12 +108,11 @@ func (r *ResourcePack) addMetadata() {
 
 func (r *ResourcePack) GetHash() string {
 	hash := sha256.New()
-	_, err := io.Copy(hash, r.ResourcePackFile)
-	if err != nil {
+	if _, err := io.Copy(hash, r.ResourcePackFile); err != nil {
 		log.Fatal(err)
 	}
 
-	return fmt.Sprintf("%x", hash.Sum(nil))
+	return hex.EncodeToString(hash.Sum(nil))
 }
 
 func FetchEmoteImage(url string) (string, error) {
