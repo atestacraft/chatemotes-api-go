@@ -115,21 +115,21 @@ func (r *ResourcePack) GetHash() string {
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-func FetchEmoteImage(url string) (string, error) {
+func downloadImage(url string) ([]byte, error) {
 	log.Println("fetching image", url)
 
 	response, err := http.Get(url)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer response.Body.Close()
 
 	bytes, err := io.ReadAll(response.Body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(bytes), nil
+	return bytes, nil
 }
 
 func (r *ResourcePack) AddEmote(url string, name string) (*Emote, error) {
@@ -146,10 +146,12 @@ func (r *ResourcePack) AddEmote(url string, name string) (*Emote, error) {
 		return nil, errors.New("no match found")
 	}
 
-	emoteBase64, err := FetchEmoteImage(emoteUrl)
+	imageBytes, err := downloadImage(emoteUrl)
 	if err != nil {
 		return nil, err
 	}
+
+	emoteBase64 := "data:image/png;base64," + base64.StdEncoding.EncodeToString(imageBytes)
 
 	emote := &Emote{
 		Name:   name,
@@ -173,10 +175,14 @@ func (r *ResourcePack) AddEmote(url string, name string) (*Emote, error) {
 	return emote, nil
 }
 
+func (r *ResourcePack) emotesTable() *simdb.Driver {
+	return r.database.Open(Emote{})
+}
+
 func (r *ResourcePack) GetEmotes() ([]Emote, error) {
 	var fetchedEmotes []Emote
-	err := r.database.
-		Open(Emote{}).
+	err := r.
+		emotesTable().
 		Get().
 		AsEntity(&fetchedEmotes)
 	if err != nil && err.Error() != "record not found" {
@@ -188,31 +194,30 @@ func (r *ResourcePack) GetEmotes() ([]Emote, error) {
 
 func (r *ResourcePack) GetEmoteByName(name string) (Emote, error) {
 	var fetchedEmote Emote
-	err := r.database.
-		Open(Emote{}).
+	err := r.
+		emotesTable().
 		Where("name", "=", strings.ToLower(name)).
 		First().
 		AsEntity(&fetchedEmote)
 
-	return fetchedEmote, err
+	return fetchedEmote, xerr.NewW(err)
 }
 
 func (r *ResourcePack) RemoveEmoteByName(name string) error {
-	emote := Emote{Name: name}
-	err := r.database.
-		Open(Emote{}).
+	err := r.
+		emotesTable().
 		Where("name", "=", strings.ToLower(name)).
-		Delete(&emote)
+		Delete(&Emote{Name: name})
 
-	return err
+	return xerr.NewW(err)
 }
 
 func (r *ResourcePack) UpdateEmote(url string, name string) (Emote, error) {
 	emote := Emote{Name: name}
-	err := r.database.
-		Open(Emote{}).
+	err := r.
+		emotesTable().
 		Where("name", "=", strings.ToLower(name)).
 		Update(&emote)
 
-	return emote, err
+	return emote, xerr.NewW(err)
 }
