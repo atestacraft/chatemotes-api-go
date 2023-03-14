@@ -82,7 +82,9 @@ func (r DB) GetEmotes() ([]Emote, error) {
 }
 
 func (r DB) GetEmoteByName(name string) (*Emote, error) {
-	res, err := read(r, func(Emote) bool { return true })
+	res, err := read(r, func(emote Emote) bool {
+		return emote.Name == name
+	})
 	if err != nil {
 		return nil, xerr.NewW(err)
 	}
