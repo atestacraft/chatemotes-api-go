@@ -2,9 +2,9 @@ package database
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/rprtr258/xerr"
 )
@@ -15,7 +15,7 @@ type entity interface {
 
 func entityName[E entity]() string {
 	var e E
-	return fmt.Sprintf("%T", e)
+	return reflect.TypeOf(e).Name()
 }
 
 type Emote struct {
@@ -45,7 +45,8 @@ func New() DB {
 func read[E entity](r DB, filter func(E) bool) ([]E, error) {
 	bytes, err := os.ReadFile(filepath.Join(r.dir, entityName[E]()))
 	if err != nil {
-		return nil, xerr.NewW(err)
+		return nil, xerr.NewWM(err, "can't open table file",
+			xerr.Field("entity", entityName[E]()))
 	}
 
 	var all []E
