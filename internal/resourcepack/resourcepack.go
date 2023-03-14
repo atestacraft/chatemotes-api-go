@@ -4,11 +4,13 @@ import (
 	"archive/zip"
 	emote_resolver "chatemotes/internal/emote"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -112,6 +114,23 @@ func (r *ResourcePack) GetHash() string {
 	return fmt.Sprintf("%x", hash.Sum(nil))
 }
 
+func FetchEmoteImage(url string) (string, error) {
+	log.Println("fetching image", url)
+
+	response, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+
+	bytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(bytes), nil
+}
+
 func (r *ResourcePack) AddEmote(url string, name string) (*Emote, error) {
 	writer := r.createWriter()
 	defer writer.Close()
@@ -126,7 +145,7 @@ func (r *ResourcePack) AddEmote(url string, name string) (*Emote, error) {
 		return nil, errors.New("no match found")
 	}
 
-	emoteBase64, err := emote_resolver.FetchEmoteImage(emoteUrl)
+	emoteBase64, err := FetchEmoteImage(emoteUrl)
 	if err != nil {
 		return nil, err
 	}

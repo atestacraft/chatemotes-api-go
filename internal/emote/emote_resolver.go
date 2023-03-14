@@ -1,11 +1,7 @@
 package emote_resolver
 
 import (
-	"encoding/base64"
 	"fmt"
-	"io"
-	"log"
-	"net/http"
 	"regexp"
 )
 
@@ -80,21 +76,4 @@ func (r *Resolver) ResolveUrl(url string) (string, bool) {
 	}
 
 	return "", false
-}
-
-func FetchEmoteImage(url string) (string, error) {
-	log.Println("fetching image", url)
-
-	response, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-	defer response.Body.Close()
-
-	bytes, err := io.ReadAll(response.Body)
-	if err != nil {
-		return "", err
-	}
-
-	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(bytes), nil
 }
