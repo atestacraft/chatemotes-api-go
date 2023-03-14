@@ -13,27 +13,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/rprtr258/xerr"
-	"github.com/sonyarouje/simdb"
-
+	"chatemotes/internal/database"
 	"chatemotes/internal/emote_resolver"
 )
-
-type Emote struct {
-	Name   string   `json:"name"`
-	Image  string   `json:"image"`
-	Type   string   `json:"type"`
-	File   string   `json:"file"`
-	Height int      `json:"height"`
-	Ascent int      `json:"ascent"`
-	Chars  []string `json:"chars"`
-}
-
-func (c Emote) ID() (string, any) {
-	return "file", c.File
-}
 
 type ResourcePackMeta struct {
 	Description string `json:"description"`
@@ -45,11 +28,11 @@ type McMeta struct {
 }
 
 type Logic struct {
-	database         *simdb.Driver
+	database         database.DB
 	ResourcePackFile *os.File
 }
 
-func New(database *simdb.Driver) Logic {
+func New(database database.DB) Logic {
 	if _, err := os.Stat("pack"); os.IsNotExist(err) {
 		if err := os.Mkdir("pack", 0755); err != nil {
 			log.Fatal(err.Error())
@@ -131,7 +114,7 @@ func downloadImage(url string) ([]byte, error) {
 	return bytes, nil
 }
 
-func (r *Logic) AddEmote(url string, name string) (*Emote, error) {
+func (r *Logic) AddEmote(url string, name string) (*database.Emote, error) {
 	writer := r.createWriter()
 	defer writer.Close()
 
@@ -152,7 +135,7 @@ func (r *Logic) AddEmote(url string, name string) (*Emote, error) {
 
 	emoteBase64 := "data:image/png;base64," + base64.StdEncoding.EncodeToString(imageBytes)
 
-	emote := &Emote{
+	emote := &database.Emote{
 		Name:   name,
 		Type:   "bitmap",
 		File:   fmt.Sprintf("minecraft:font/%s.png", name),
@@ -174,57 +157,18 @@ func (r *Logic) AddEmote(url string, name string) (*Emote, error) {
 	return emote, nil
 }
 
-func (r *Logic) emotesTable() *simdb.Driver {
-	return r.database.Open(Emote{})
+func (r *Logic) GetEmotes() ([]database.Emote, error) {
+	return r.database.GetEmotes()
 }
 
-func (r *Logic) GetEmotes() ([]Emote, error) {
-	var fetchedEmotes []Emote
-	err := r.
-		emotesTable().
-		Get().
-		AsEntity(&fetchedEmotes)
-	if err != nil && err.Error() != "record not found" {
-		return nil, xerr.NewW(err)
-	}
-
-	return fetchedEmotes, nil
+func (r *Logic) UpdateEmote(name string) (database.Emote, error) {
+	return r.database.UpdateEmote(name)
 }
 
-func (r *Logic) GetEmoteByName(name string) (*Emote, error) {
-	var emote Emote
-	err := r.
-		emotesTable().
-		Where("name", "=", strings.ToLower(name)).
-		First().
-		AsEntity(&emote)
-
-	if err != nil {
-		if err.Error() == "record not found" {
-			return nil, nil
-		}
-
-		return nil, xerr.NewW(err)
-	}
-
-	return &emote, nil
+func (r *Logic) GetEmoteByName(name string) (*database.Emote, error) {
+	return r.database.GetEmoteByName(name)
 }
 
 func (r *Logic) RemoveEmoteByName(name string) error {
-	err := r.
-		emotesTable().
-		Where("name", "=", strings.ToLower(name)).
-		Delete(&Emote{Name: name})
-
-	return xerr.NewW(err)
-}
-
-func (r *Logic) UpdateEmote(name string) (Emote, error) {
-	emote := Emote{Name: name}
-	err := r.
-		emotesTable().
-		Where("name", "=", strings.ToLower(name)).
-		Update(&emote)
-
-	return emote, xerr.NewW(err)
+	return r.database.RemoveEmoteByName(name)
 }
