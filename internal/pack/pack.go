@@ -15,6 +15,8 @@ import (
 	"github.com/rprtr258/xerr"
 )
 
+const ImageBytesPrefix = "data:image/png;base64,"
+
 type Pack struct {
 	db       database.DB
 	filename string
@@ -61,6 +63,8 @@ func writeMetadata(w *zip.Writer) error {
 }
 
 func (r *Pack) regenerateFile() error {
+	log.Println("regenerating pack")
+
 	if _, err := os.Stat("pack"); os.IsNotExist(err) {
 		if err := os.Mkdir("pack", 0755); err != nil {
 			return xerr.NewW(err)
@@ -86,18 +90,21 @@ func (r *Pack) regenerateFile() error {
 	}
 
 	for _, emote := range emotes {
+		imageContent := emote.Image[len(ImageBytesPrefix):]
+
+		imageBytes, err := base64.StdEncoding.DecodeString(imageContent)
+		if err != nil {
+			log.Println(xerr.NewWM(err, "can't decode image in db",
+				xerr.Field("name", emote.Name)).Error())
+			continue
+		}
+
 		file, err := w.Create(fmt.Sprintf(
 			"assets/minecraft/textures/font/%s.png",
 			emote.Name,
 		))
 		if err != nil {
 			return xerr.NewW(err)
-		}
-
-		imageBytes, err := base64.RawStdEncoding.DecodeString(emote.Image)
-		if err != nil {
-			return xerr.NewWM(err, "can't decode image in db",
-				xerr.Field("name", emote.Name))
 		}
 
 		if _, err = file.Write(imageBytes); err != nil {
@@ -119,6 +126,14 @@ func (r *Pack) update() error {
 
 func (r *Pack) Invalidate() {
 	r.isFresh = false
+}
+
+func (r *Pack) Filename() string {
+	if err := r.update(); err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return r.filename
 }
 
 func (r *Pack) Hash() (string, error) {

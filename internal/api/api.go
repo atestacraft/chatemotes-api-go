@@ -99,7 +99,7 @@ func setEmoteRoutes(app fiber.Router, logic logic.Logic) {
 	})
 }
 
-func New(packFilename string, logic logic.Logic) *fiber.App {
+func New(logic logic.Logic) *fiber.App {
 	app := fiber.New()
 	app.Use(logger.New())
 
@@ -113,7 +113,7 @@ func New(packFilename string, logic logic.Logic) *fiber.App {
 	})
 	setEmoteRoutes(app, logic)
 	app.Get("/pack", func(c *fiber.Ctx) error {
-		return c.Download(packFilename)
+		return c.Download(logic.GetPackFilename())
 	})
 
 	return app

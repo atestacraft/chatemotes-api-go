@@ -91,7 +91,7 @@ func (r *Logic) AddEmote(url string, name string) (*database.Emote, error) {
 		Height: 10,
 		Ascent: 7,
 		Chars:  []string{"🤙"},
-		Image:  "data:image/png;base64," + imageBase64,
+		Image:  pack.ImageBytesPrefix + imageBase64,
 	}
 
 	if err := r.db.Insert(emote); err != nil {
@@ -108,6 +108,7 @@ func (r *Logic) GetEmotes() ([]database.Emote, error) {
 }
 
 func (r *Logic) UpdateEmote(name string) (database.Emote, error) {
+	r.pack.Invalidate()
 	return r.db.UpdateEmote(name)
 }
 
@@ -116,5 +117,10 @@ func (r *Logic) GetEmoteByName(name string) (*database.Emote, error) {
 }
 
 func (r *Logic) RemoveEmoteByName(name string) error {
+	r.pack.Invalidate()
 	return r.db.RemoveEmoteByName(name)
+}
+
+func (r *Logic) GetPackFilename() string {
+	return r.pack.Filename()
 }
