@@ -45,6 +45,7 @@ func NewRoute(app fiber.Router, logic logic.Logic) {
 		return c.JSON(response)
 	})
 
+	// TODO: :name ???
 	app.Patch("/emotes", func(c *fiber.Ctx) error {
 		var body struct {
 			Url  string `json:"url"`

@@ -81,6 +81,7 @@ func (r DB) RemoveEmoteByName(name string) error {
 }
 
 func (r DB) UpdateEmote(name string) (Emote, error) {
+	// TODO: чего апдейт то нахуй
 	emote := Emote{Name: name}
 	err := r.
 		emotesTable().
