@@ -178,9 +178,8 @@ func (r *ResourcePack) GetEmotes() []Emote {
 		Open(Emote{}).
 		Get().
 		AsEntity(&fetchedEmotes)
-
-	if err != nil {
-		log.Fatal(err)
+	if err != nil && err.Error() != "record not found" {
+		log.Fatal(err.Error())
 	}
 
 	return fetchedEmotes
