@@ -5,6 +5,7 @@ import (
 	emote_resolver "chatemotes/internal/emote"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -122,9 +123,9 @@ func (r *ResourcePack) AddEmote(url string, name string) (*Emote, error) {
 		return nil, err
 	}
 
-	emoteUrl, err := r.emoteResolver.ResolveUrl(url)
-	if err != nil {
-		return nil, err
+	emoteUrl, ok := r.emoteResolver.ResolveUrl(url)
+	if !ok {
+		return nil, errors.New("no match found")
 	}
 
 	emoteBase64, err := r.emoteResolver.FetchEmoteImage(emoteUrl)

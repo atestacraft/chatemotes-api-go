@@ -2,9 +2,9 @@ package emote_resolver
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"regexp"
 )
@@ -83,24 +83,24 @@ func getUrlMatches(url string, r *regexp.Regexp, index int) string {
 	return matches[index]
 }
 
-func (r *Resolver) ResolveUrl(url string) (string, error) {
+func (r *Resolver) ResolveUrl(url string) (string, bool) {
 	for _, resolver := range r.emoteResolver {
 		emoteUrl, matches := resolver.matchUrl(url)
 		if matches != "" {
-			return emoteUrl, nil
+			return emoteUrl, true
 		}
 	}
 
-	return "", errors.New("no match found")
+	return "", false
 }
 
 func (r *Resolver) FetchEmoteImage(url string) (string, error) {
-	fmt.Println(url)
+	log.Println("fetching image", url)
+
 	response, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}
-
 	defer response.Body.Close()
 
 	bytes, err := io.ReadAll(response.Body)
@@ -108,9 +108,5 @@ func (r *Resolver) FetchEmoteImage(url string) (string, error) {
 		return "", err
 	}
 
-	var base64Encoding string
-	base64Encoding += "data:image/png;base64,"
-	base64Encoding += base64.StdEncoding.EncodeToString(bytes)
-
-	return base64Encoding, err
+	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(bytes), nil
 }
