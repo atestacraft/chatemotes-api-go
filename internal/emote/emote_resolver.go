@@ -29,7 +29,9 @@ func (r emoteResolver) resolve(url string) (string, bool) {
 	return fmt.Sprintf(r.imgFmt, matches[r.index]), true
 }
 
-func New() *Resolver {
+var EmoteResolver = newEmoteResolver()
+
+func newEmoteResolver() *Resolver {
 	return &Resolver{
 		resolvers: []emoteResolver{
 			// 7tv
@@ -80,7 +82,7 @@ func (r *Resolver) ResolveUrl(url string) (string, bool) {
 	return "", false
 }
 
-func (r *Resolver) FetchEmoteImage(url string) (string, error) {
+func FetchEmoteImage(url string) (string, error) {
 	log.Println("fetching image", url)
 
 	response, err := http.Get(url)

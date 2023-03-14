@@ -9,7 +9,6 @@ import (
 	"chatemotes/internal/api/hash"
 	"chatemotes/internal/api/pack"
 	"chatemotes/internal/database"
-	emote_resolver "chatemotes/internal/emote"
 	"chatemotes/internal/resourcepack"
 	"chatemotes/internal/services"
 )
@@ -17,13 +16,11 @@ import (
 func run() error {
 	app := fiber.New()
 	database := database.New()
-	emoteResolver := emote_resolver.New()
-	resourcepack := resourcepack.New(database, emoteResolver)
+	resourcepack := resourcepack.New(database)
 
 	services := &services.Services{
-		ResoucePack:   resourcepack,
-		Database:      database,
-		EmoteResolver: emoteResolver,
+		ResoucePack: resourcepack,
+		Database:    database,
 	}
 
 	hash.NewRoute(app, services)

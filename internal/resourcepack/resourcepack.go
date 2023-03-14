@@ -43,11 +43,10 @@ type McMeta struct {
 
 type ResourcePack struct {
 	database         *simdb.Driver
-	emoteResolver    *emote_resolver.Resolver
 	ResourcePackFile *os.File
 }
 
-func New(database *simdb.Driver, emoteResolver *emote_resolver.Resolver) *ResourcePack {
+func New(database *simdb.Driver) *ResourcePack {
 	if _, err := os.Stat("pack"); os.IsNotExist(err) {
 		if err := os.Mkdir("pack", 0755); err != nil {
 			log.Fatal(err.Error())
@@ -61,7 +60,6 @@ func New(database *simdb.Driver, emoteResolver *emote_resolver.Resolver) *Resour
 
 	resoucePack := &ResourcePack{
 		database:         database,
-		emoteResolver:    emoteResolver,
 		ResourcePackFile: resoucePackFile,
 	}
 
@@ -123,12 +121,12 @@ func (r *ResourcePack) AddEmote(url string, name string) (*Emote, error) {
 		return nil, err
 	}
 
-	emoteUrl, ok := r.emoteResolver.ResolveUrl(url)
+	emoteUrl, ok := emote_resolver.EmoteResolver.ResolveUrl(url)
 	if !ok {
 		return nil, errors.New("no match found")
 	}
 
-	emoteBase64, err := r.emoteResolver.FetchEmoteImage(emoteUrl)
+	emoteBase64, err := emote_resolver.FetchEmoteImage(emoteUrl)
 	if err != nil {
 		return nil, err
 	}
