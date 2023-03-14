@@ -220,7 +220,7 @@ func (r *ResourcePack) RemoveEmoteByName(name string) error {
 	return xerr.NewW(err)
 }
 
-func (r *ResourcePack) UpdateEmote(url string, name string) (Emote, error) {
+func (r *ResourcePack) UpdateEmote(name string) (Emote, error) {
 	emote := Emote{Name: name}
 	err := r.
 		emotesTable().

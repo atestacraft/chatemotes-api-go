@@ -54,7 +54,7 @@ func NewRoute(app fiber.Router, services *services.Services) {
 				"error": err.Error(),
 			})
 		}
-		response, err := services.ResoucePack.UpdateEmote(body.Url, body.Name)
+		response, err := services.ResoucePack.UpdateEmote(body.Name)
 		if err != nil {
 			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 				"error": err.Error(),
