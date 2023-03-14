@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	emote_resolver "chatemotes/internal/emote"
+	"chatemotes/internal/emote_resolver"
 )
 
 func TestResolveUrl_ok(t *testing.T) {

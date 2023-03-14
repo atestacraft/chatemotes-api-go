@@ -5,21 +5,13 @@ import (
 
 	"chatemotes/internal/api"
 	"chatemotes/internal/database"
-	"chatemotes/internal/resourcepack"
-	"chatemotes/internal/services"
+	"chatemotes/internal/logic"
 )
 
 func run() error {
 	database := database.New()
-	resourcepack := resourcepack.New(database)
-
-	services := &services.Services{
-		ResoucePack: resourcepack,
-	}
-
-	app := api.New(services)
-
-	return app.Listen(":3000")
+	logic := logic.New(database)
+	return api.New(logic).Listen(":3000")
 }
 
 func main() {

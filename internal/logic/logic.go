@@ -1,4 +1,4 @@
-package resourcepack
+package logic
 
 import (
 	"archive/zip"
@@ -46,12 +46,12 @@ type McMeta struct {
 	Pack ResourcePackMeta `json:"pack"`
 }
 
-type ResourcePack struct {
+type Logic struct {
 	database         *simdb.Driver
 	ResourcePackFile *os.File
 }
 
-func New(database *simdb.Driver) *ResourcePack {
+func New(database *simdb.Driver) Logic {
 	if _, err := os.Stat("pack"); os.IsNotExist(err) {
 		if err := os.Mkdir("pack", 0755); err != nil {
 			log.Fatal(err.Error())
@@ -63,7 +63,7 @@ func New(database *simdb.Driver) *ResourcePack {
 		log.Fatal(err.Error())
 	}
 
-	resoucePack := &ResourcePack{
+	resoucePack := Logic{
 		database:         database,
 		ResourcePackFile: resoucePackFile,
 	}
@@ -80,11 +80,11 @@ func New(database *simdb.Driver) *ResourcePack {
 	return resoucePack
 }
 
-func (r *ResourcePack) createWriter() *zip.Writer {
+func (r *Logic) createWriter() *zip.Writer {
 	return zip.NewWriter(r.ResourcePackFile)
 }
 
-func (r *ResourcePack) addMetadata() {
+func (r *Logic) addMetadata() {
 	writer := r.createWriter()
 	defer writer.Close()
 
@@ -107,7 +107,7 @@ func (r *ResourcePack) addMetadata() {
 	}
 }
 
-func (r *ResourcePack) GetHash() string {
+func (r *Logic) GetHash() string {
 	hash := sha256.New()
 	if _, err := io.Copy(hash, r.ResourcePackFile); err != nil {
 		log.Fatal(err)
@@ -133,7 +133,7 @@ func downloadImage(url string) ([]byte, error) {
 	return bytes, nil
 }
 
-func (r *ResourcePack) AddEmote(url string, name string) (*Emote, error) {
+func (r *Logic) AddEmote(url string, name string) (*Emote, error) {
 	writer := r.createWriter()
 	defer writer.Close()
 
@@ -176,11 +176,11 @@ func (r *ResourcePack) AddEmote(url string, name string) (*Emote, error) {
 	return emote, nil
 }
 
-func (r *ResourcePack) emotesTable() *simdb.Driver {
+func (r *Logic) emotesTable() *simdb.Driver {
 	return r.database.Open(Emote{})
 }
 
-func (r *ResourcePack) GetEmotes() ([]Emote, error) {
+func (r *Logic) GetEmotes() ([]Emote, error) {
 	var fetchedEmotes []Emote
 	err := r.
 		emotesTable().
@@ -193,7 +193,7 @@ func (r *ResourcePack) GetEmotes() ([]Emote, error) {
 	return fetchedEmotes, nil
 }
 
-func (r *ResourcePack) GetEmoteByName(name string) (*Emote, error) {
+func (r *Logic) GetEmoteByName(name string) (*Emote, error) {
 	var emote Emote
 	err := r.
 		emotesTable().
@@ -212,7 +212,7 @@ func (r *ResourcePack) GetEmoteByName(name string) (*Emote, error) {
 	return &emote, nil
 }
 
-func (r *ResourcePack) RemoveEmoteByName(name string) error {
+func (r *Logic) RemoveEmoteByName(name string) error {
 	err := r.
 		emotesTable().
 		Where("name", "=", strings.ToLower(name)).
@@ -221,7 +221,7 @@ func (r *ResourcePack) RemoveEmoteByName(name string) error {
 	return xerr.NewW(err)
 }
 
-func (r *ResourcePack) UpdateEmote(name string) (Emote, error) {
+func (r *Logic) UpdateEmote(name string) (Emote, error) {
 	emote := Emote{Name: name}
 	err := r.
 		emotesTable().

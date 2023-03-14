@@ -1,10 +1,11 @@
 package emotes
 
 import (
-	"chatemotes/internal/services"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
+
+	"chatemotes/internal/logic"
 )
 
 type EmoteBody struct {
@@ -12,9 +13,9 @@ type EmoteBody struct {
 	Name string `json:"name" xml:"name" form:"name"`
 }
 
-func NewRoute(app fiber.Router, services *services.Services) {
+func NewRoute(app fiber.Router, logic logic.Logic) {
 	app.Get("/emotes", func(c *fiber.Ctx) error {
-		res, err := services.ResoucePack.GetEmotes()
+		res, err := logic.GetEmotes()
 		if err != nil {
 			return c.Status(http.StatusInternalServerError).
 				JSON(fiber.Map{
@@ -34,7 +35,7 @@ func NewRoute(app fiber.Router, services *services.Services) {
 				})
 		}
 
-		response, err := services.ResoucePack.AddEmote(emoteBody.Url, emoteBody.Name)
+		response, err := logic.AddEmote(emoteBody.Url, emoteBody.Name)
 		if err != nil {
 			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 				"error": err.Error(),
@@ -54,7 +55,7 @@ func NewRoute(app fiber.Router, services *services.Services) {
 				"error": err.Error(),
 			})
 		}
-		response, err := services.ResoucePack.UpdateEmote(body.Name)
+		response, err := logic.UpdateEmote(body.Name)
 		if err != nil {
 			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 				"error": err.Error(),
@@ -64,7 +65,7 @@ func NewRoute(app fiber.Router, services *services.Services) {
 	})
 
 	app.Get("/emotes/:name", func(c *fiber.Ctx) error {
-		emote, err := services.ResoucePack.GetEmoteByName(c.Params("name"))
+		emote, err := logic.GetEmoteByName(c.Params("name"))
 		if err != nil {
 			return c.Status(http.StatusNotFound).JSON(fiber.Map{
 				"error": err.Error(),
@@ -79,7 +80,7 @@ func NewRoute(app fiber.Router, services *services.Services) {
 	})
 
 	app.Delete("/emotes/:name", func(c *fiber.Ctx) error {
-		err := services.ResoucePack.RemoveEmoteByName(c.Params("name"))
+		err := logic.RemoveEmoteByName(c.Params("name"))
 		if err != nil {
 			return c.Status(http.StatusNotFound).JSON(fiber.Map{
 				"error": err.Error(),

@@ -1,20 +1,20 @@
 package api
 
 import (
-	"chatemotes/internal/api/emotes"
-	"chatemotes/internal/api/hash"
-	"chatemotes/internal/services"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+
+	"chatemotes/internal/api/emotes"
+	"chatemotes/internal/api/hash"
+	"chatemotes/internal/logic"
 )
 
-func New(services *services.Services) *fiber.App {
+func New(logic logic.Logic) *fiber.App {
 	app := fiber.New()
 	app.Use(logger.New())
 
-	hash.NewRoute(app, services)
-	emotes.NewRoute(app, services)
+	hash.NewRoute(app, logic)
+	emotes.NewRoute(app, logic)
 	app.Static("/pack", "./pack", fiber.Static{
 		Index:          "resourcepack.zip",
 		Download:       true,
