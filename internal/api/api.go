@@ -88,7 +88,7 @@ func setEmoteRoutes(app fiber.Router, logic logic.Logic) {
 	app.Delete("/emotes/:name", func(c *fiber.Ctx) error {
 		err := logic.RemoveEmoteByName(c.Params("name"))
 		if err != nil {
-			return c.Status(http.StatusNotFound).
+			return c.Status(http.StatusInternalServerError).
 				JSON(fiber.Map{
 					"error": err.Error(),
 				})

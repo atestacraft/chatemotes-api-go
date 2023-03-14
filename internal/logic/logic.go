@@ -84,7 +84,7 @@ func (r *Logic) AddEmote(url string, name string) (*database.Emote, error) {
 
 	imageBase64 := base64.StdEncoding.EncodeToString(imageBytes)
 
-	emote := &database.Emote{
+	emote := database.Emote{
 		Name:   name,
 		Type:   "bitmap",
 		File:   fmt.Sprintf("minecraft:font/%s.png", name),
@@ -100,7 +100,7 @@ func (r *Logic) AddEmote(url string, name string) (*database.Emote, error) {
 
 	r.pack.Invalidate()
 
-	return emote, nil
+	return &emote, nil
 }
 
 func (r *Logic) GetEmotes() ([]database.Emote, error) {
