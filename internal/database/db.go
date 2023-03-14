@@ -25,7 +25,7 @@ func read[E entity](r DB, filter func(E) bool) ([]E, error) {
 			xerr.Field("entity", entityName[E]()))
 	}
 
-	var all []E
+	var all map[string]E
 	if err := json.Unmarshal(bytes, &all); err != nil {
 		return nil, xerr.NewW(err)
 	}
@@ -41,7 +41,12 @@ func read[E entity](r DB, filter func(E) bool) ([]E, error) {
 }
 
 func write[E entity](r DB, entities []E) error {
-	bytes, err := json.Marshal(entities)
+	all := make(map[string]E, len(entities))
+	for _, entity := range entities {
+		all[entity.ID()] = entity
+	}
+
+	bytes, err := json.Marshal(all)
 	if err != nil {
 		return xerr.NewW(err)
 	}
