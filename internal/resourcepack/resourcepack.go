@@ -2,7 +2,6 @@ package resourcepack
 
 import (
 	"archive/zip"
-	emote_resolver "chatemotes/internal/emote"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
@@ -18,6 +17,8 @@ import (
 
 	"github.com/rprtr258/xerr"
 	"github.com/sonyarouje/simdb"
+
+	"chatemotes/internal/emote_resolver"
 )
 
 type Emote struct {
