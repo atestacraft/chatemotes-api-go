@@ -18,8 +18,31 @@ func entityName[E entity]() string {
 	return reflect.TypeOf(e).Name()
 }
 
+func ensureTableFile(name string) error {
+	if _, err := os.Stat(name); err != nil {
+		if !os.IsNotExist(err) {
+			return xerr.NewW(err)
+		}
+
+		file, err := os.Create(name)
+		if err != nil {
+			return xerr.NewW(err)
+		}
+
+		return file.Close()
+	}
+
+	return nil
+}
+
 func read[E entity](r DB, filter func(E) bool) ([]E, error) {
-	bytes, err := os.ReadFile(filepath.Join(r.dir, entityName[E]()))
+	tableFilename := filepath.Join(r.dir, entityName[E]())
+
+	if err := ensureTableFile(tableFilename); err != nil {
+		return nil, xerr.NewW(err)
+	}
+
+	bytes, err := os.ReadFile(tableFilename)
 	if err != nil {
 		return nil, xerr.NewWM(err, "can't open table file",
 			xerr.Field("entity", entityName[E]()))
@@ -41,6 +64,12 @@ func read[E entity](r DB, filter func(E) bool) ([]E, error) {
 }
 
 func write[E entity](r DB, entities []E) error {
+	tableFilename := filepath.Join(r.dir, entityName[E]())
+
+	if err := ensureTableFile(tableFilename); err != nil {
+		return xerr.NewW(err)
+	}
+
 	all := make(map[string]E, len(entities))
 	for _, entity := range entities {
 		all[entity.ID()] = entity
@@ -51,7 +80,7 @@ func write[E entity](r DB, entities []E) error {
 		return xerr.NewW(err)
 	}
 
-	if err := os.WriteFile(filepath.Join(r.dir, entityName[E]()), bytes, 0644); err != nil {
+	if err := os.WriteFile(tableFilename, bytes, 0644); err != nil {
 		return xerr.NewW(err)
 	}
 

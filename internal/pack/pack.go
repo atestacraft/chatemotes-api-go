@@ -65,7 +65,11 @@ func writeMetadata(w *zip.Writer) error {
 func (r *Pack) regenerate() error {
 	log.Println("regenerating pack")
 
-	if _, err := os.Stat("pack"); os.IsNotExist(err) {
+	if _, err := os.Stat("pack"); err != nil {
+		if !os.IsNotExist(err) {
+			return xerr.NewW(err)
+		}
+
 		if err := os.Mkdir("pack", 0755); err != nil {
 			return xerr.NewW(err)
 		}
