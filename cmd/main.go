@@ -20,7 +20,6 @@ func run() error {
 
 	services := &services.Services{
 		ResoucePack: resourcepack,
-		Database:    database,
 	}
 
 	app := fiber.New()
