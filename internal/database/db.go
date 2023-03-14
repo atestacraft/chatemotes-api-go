@@ -29,6 +29,10 @@ func ensureTableFile(name string) error {
 			return xerr.NewW(err)
 		}
 
+		if _, err := file.Write([]byte("{}")); err != nil {
+			return xerr.NewW(err)
+		}
+
 		return file.Close()
 	}
 
