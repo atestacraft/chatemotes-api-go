@@ -36,7 +36,7 @@ func setEmoteRoutes(app fiber.Router, logic logic.Logic) {
 
 		response, err := logic.AddEmote(body.Url, body.Name)
 		if err != nil {
-			return c.Status(http.StatusBadRequest).
+			return c.Status(http.StatusInternalServerError).
 				JSON(fiber.Map{
 					"error": err.Error(),
 				})
