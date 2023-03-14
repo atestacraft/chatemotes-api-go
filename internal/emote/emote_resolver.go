@@ -9,17 +9,17 @@ import (
 	"regexp"
 )
 
-type EmoteResolver struct {
+type emoteResolver struct {
 	regex  *regexp.Regexp
 	index  int
 	imgFmt string
 }
 
 type Resolver struct {
-	emoteResolver []EmoteResolver
+	resolvers []emoteResolver
 }
 
-func (r EmoteResolver) resolve(url string) (string, bool) {
+func (r emoteResolver) resolve(url string) (string, bool) {
 	matches := r.regex.FindStringSubmatch(url)
 
 	if len(matches) == 0 {
@@ -31,7 +31,7 @@ func (r EmoteResolver) resolve(url string) (string, bool) {
 
 func New() *Resolver {
 	return &Resolver{
-		emoteResolver: []EmoteResolver{
+		resolvers: []emoteResolver{
 			// 7tv
 			{
 				regex:  regexp.MustCompile(`^https://7tv.app/emotes/(\w+)$`),
@@ -70,7 +70,7 @@ func New() *Resolver {
 }
 
 func (r *Resolver) ResolveUrl(url string) (string, bool) {
-	for _, resolver := range r.emoteResolver {
+	for _, resolver := range r.resolvers {
 		emoteUrl, ok := resolver.resolve(url)
 		if ok {
 			return emoteUrl, true
