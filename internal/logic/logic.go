@@ -31,10 +31,8 @@ type Emote struct {
 	Chars  []string `json:"chars"`
 }
 
-func (c Emote) ID() (jsonField string, value interface{}) {
-	value = c.File
-	jsonField = "file"
-	return
+func (c Emote) ID() (string, any) {
+	return "file", c.File
 }
 
 type ResourcePackMeta struct {
