@@ -2,17 +2,22 @@ package logic
 
 import (
 	"archive/zip"
+	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"image/png"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/rprtr258/xerr"
+	"github.com/tidbyt/go-libwebp/webp"
 
 	"chatemotes/internal/database"
 	"chatemotes/internal/emote_resolver"
@@ -114,26 +119,62 @@ func downloadImage(url string) ([]byte, error) {
 	return bytes, nil
 }
 
+func webpToPng(b []byte) ([]byte, error) {
+	decoder, err := webp.NewAnimationDecoder(b)
+	if err != nil {
+		return nil, xerr.NewW(err)
+	}
+	defer decoder.Close()
+
+	anim, err := decoder.Decode()
+	if err != nil {
+		return nil, xerr.NewW(err)
+	}
+
+	var out bytes.Buffer
+	if err := png.Encode(&out, anim.Image[0]); err != nil {
+		return nil, xerr.NewW(err)
+	}
+
+	return out.Bytes(), nil
+}
+
 func (r *Logic) AddEmote(url string, name string) (*database.Emote, error) {
 	writer := r.createWriter()
 	defer writer.Close()
 
-	file, err := writer.Create(fmt.Sprintf("assets/minecraft/textures/font/%s.png", name))
+	file, err := writer.Create(fmt.Sprintf(
+		"assets/minecraft/textures/font/%s.png",
+		name,
+	))
 	if err != nil {
 		return nil, err
 	}
 
-	emoteUrl, ok := emote_resolver.EmoteResolver.ResolveUrl(url)
+	imageURL, ok := emote_resolver.EmoteResolver.ResolveUrl(url)
 	if !ok {
 		return nil, errors.New("no match found")
 	}
 
-	imageBytes, err := downloadImage(emoteUrl)
+	imageBytes, err := downloadImage(imageURL)
 	if err != nil {
 		return nil, err
 	}
 
-	emoteBase64 := "data:image/png;base64," + base64.StdEncoding.EncodeToString(imageBytes)
+	img, err := webpToPng(imageBytes)
+	if err != nil {
+		return nil, xerr.NewWM(
+			err,
+			"failed decoding webp image",
+			xerr.Field("url", imageURL),
+		)
+	}
+
+	if _, err = file.Write(img); err != nil {
+		return nil, err
+	}
+
+	imageBase64 := base64.StdEncoding.EncodeToString(imageBytes)
 
 	emote := &database.Emote{
 		Name:   name,
@@ -142,16 +183,11 @@ func (r *Logic) AddEmote(url string, name string) (*database.Emote, error) {
 		Height: 10,
 		Ascent: 7,
 		Chars:  []string{"🤙"},
-		Image:  emoteBase64,
-	}
-
-	_, err = file.Write([]byte(emoteBase64))
-	if err != nil {
-		return emote, err
+		Image:  "data:image/png;base64," + imageBase64,
 	}
 
 	if err := r.database.Insert(emote); err != nil {
-		return emote, err
+		return nil, err
 	}
 
 	return emote, nil

@@ -7,6 +7,7 @@ require (
 	github.com/rprtr258/xerr v0.0.2
 	github.com/sonyarouje/simdb v0.1.0
 	github.com/stretchr/testify v1.8.2
+	github.com/tidbyt/go-libwebp v0.0.0-20220802221933-1fabc3b46601
 )
 
 require (
