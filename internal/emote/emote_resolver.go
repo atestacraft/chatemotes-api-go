@@ -10,11 +10,23 @@ import (
 )
 
 type EmoteResolver struct {
-	matchUrl func(url string) (string, bool)
+	regex  *regexp.Regexp
+	index  int
+	imgFmt string
 }
 
 type Resolver struct {
 	emoteResolver []EmoteResolver
+}
+
+func (r EmoteResolver) resolve(url string) (string, bool) {
+	matches := r.regex.FindStringSubmatch(url)
+
+	if len(matches) == 0 {
+		return "", false
+	}
+
+	return fmt.Sprintf(r.imgFmt, matches[r.index]), true
 }
 
 func New() *Resolver {
@@ -22,66 +34,44 @@ func New() *Resolver {
 		emoteResolver: []EmoteResolver{
 			// 7tv
 			{
-				matchUrl: func(url string) (string, bool) {
-					r := regexp.MustCompile(`^https://7tv.app/emotes/(\w+)$`)
-					matches := getUrlMatches(url, r, 1)
-					return fmt.Sprintf("https://cdn.7tv.app/emote/%s/2x.webp", matches), matches != ""
-				},
+				regex:  regexp.MustCompile(`^https://7tv.app/emotes/(\w+)$`),
+				index:  1,
+				imgFmt: "https://cdn.7tv.app/emote/%s/2x.webp",
 			},
 			{
-				matchUrl: func(url string) (string, bool) {
-					r := regexp.MustCompile(`^https://cdn.7tv.app/emote/(\w+)`)
-					matches := getUrlMatches(url, r, 0)
-					return fmt.Sprintf("%s/2x.webp", matches), matches != ""
-				},
+				regex:  regexp.MustCompile(`^https://cdn.7tv.app/emote/(\w+)`),
+				index:  0,
+				imgFmt: "%s/2x.webp",
 			},
 			// bttv
 			{
-				matchUrl: func(url string) (string, bool) {
-					r := regexp.MustCompile(`^https:\/\/betterttv.com\/emotes\/(\w+)`)
-					matches := getUrlMatches(url, r, 1)
-					return fmt.Sprintf("https://cdn.betterttv.net/emote/%s/2x", matches), matches != ""
-				},
+				regex:  regexp.MustCompile(`^https:\/\/betterttv.com\/emotes\/(\w+)`),
+				index:  1,
+				imgFmt: "https://cdn.betterttv.net/emote/%s/2x",
 			},
 			{
-				matchUrl: func(url string) (string, bool) {
-					r := regexp.MustCompile(`^https:\/\/cdn.betterttv.net\/emote\/(\w+)`)
-					matches := getUrlMatches(url, r, 0)
-					return fmt.Sprintf("%s/2x", matches), matches != ""
-				},
+				regex:  regexp.MustCompile(`^https:\/\/cdn.betterttv.net\/emote\/(\w+)`),
+				index:  0,
+				imgFmt: "%s/2x",
 			},
 			// ffz
 			{
-				matchUrl: func(url string) (string, bool) {
-					r := regexp.MustCompile(`^https:\/\/www.frankerfacez.com\/emoticon\/(\d+)`)
-					matches := getUrlMatches(url, r, 1)
-					return fmt.Sprintf("https://cdn.frankerfacez.com/emoticon/%s/2", matches), matches != ""
-				},
+				regex:  regexp.MustCompile(`^https:\/\/www.frankerfacez.com\/emoticon\/(\d+)`),
+				index:  1,
+				imgFmt: "https://cdn.frankerfacez.com/emoticon/%s/2",
 			},
 			{
-				matchUrl: func(url string) (string, bool) {
-					r := regexp.MustCompile(`^https:\/\/cdn.frankerfacez.com\/emoticon\/(\w+)`)
-					matches := getUrlMatches(url, r, 0)
-					return fmt.Sprintf("%s/2", matches), matches != ""
-				},
+				regex:  regexp.MustCompile(`^https:\/\/cdn.frankerfacez.com\/emoticon\/(\w+)`),
+				index:  0,
+				imgFmt: "%s/2",
 			},
 		},
 	}
 }
 
-func getUrlMatches(url string, r *regexp.Regexp, index int) string {
-	matches := r.FindStringSubmatch(url)
-
-	if len(matches) == 0 {
-		return ""
-	}
-
-	return matches[index]
-}
-
 func (r *Resolver) ResolveUrl(url string) (string, bool) {
 	for _, resolver := range r.emoteResolver {
-		emoteUrl, ok := resolver.matchUrl(url)
+		emoteUrl, ok := resolver.resolve(url)
 		if ok {
 			return emoteUrl, true
 		}
