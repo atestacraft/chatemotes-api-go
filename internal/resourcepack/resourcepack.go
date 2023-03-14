@@ -48,12 +48,14 @@ type ResourcePack struct {
 
 func New(database *simdb.Driver, emoteResolver *emote_resolver.Resolver) *ResourcePack {
 	if _, err := os.Stat("pack"); os.IsNotExist(err) {
-		os.Mkdir("pack", 0755)
+		if err := os.Mkdir("pack", 0755); err != nil {
+			log.Fatal(err.Error())
+		}
 	}
 
 	resoucePackFile, err := os.OpenFile(path.Join("pack", "resourcepack.zip"), os.O_CREATE|os.O_RDWR, 0755)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	resoucePack := &ResourcePack{
@@ -64,7 +66,7 @@ func New(database *simdb.Driver, emoteResolver *emote_resolver.Resolver) *Resour
 
 	fileStat, err := resoucePackFile.Stat()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	if fileStat.Size() == 0 {
@@ -82,7 +84,7 @@ func (r *ResourcePack) addMetadata() {
 	writer := r.createWriter()
 	file, err := writer.Create("pack.mcmeta")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	bytes, err := json.Marshal(&ResourcePackMeta{
@@ -90,12 +92,12 @@ func (r *ResourcePack) addMetadata() {
 		PackFormat:  9,
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	_, err = file.Write(bytes)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	writer.Close()
@@ -112,6 +114,24 @@ func (r *ResourcePack) GetHash() string {
 }
 
 func (r *ResourcePack) AddEmote(url string, name string) (*Emote, error) {
+	writer := r.createWriter()
+	defer writer.Close()
+
+	file, err := writer.Create(fmt.Sprintf("assets/minecraft/textures/font/%s.png", name))
+	if err != nil {
+		return nil, err
+	}
+
+	emoteUrl, err := r.emoteResolver.ResolveUrl(url)
+	if err != nil {
+		return nil, err
+	}
+
+	emoteBase64, err := r.emoteResolver.FetchEmoteImage(emoteUrl)
+	if err != nil {
+		return nil, err
+	}
+
 	emote := &Emote{
 		Name:   name,
 		Type:   "bitmap",
@@ -119,36 +139,17 @@ func (r *ResourcePack) AddEmote(url string, name string) (*Emote, error) {
 		Height: 10,
 		Ascent: 7,
 		Chars:  []string{"🤙"},
+		Image:  emoteBase64,
 	}
-
-	writer := r.createWriter()
-	file, err := writer.Create(fmt.Sprintf("assets/minecraft/textures/font/%s.png", name))
-	if err != nil {
-		return emote, err
-	}
-
-	emoteUrl, err := r.emoteResolver.ResolveUrl(url)
-	if err != nil {
-		return emote, err
-	}
-
-	emoteBase64, err := r.emoteResolver.FetchEmoteImage(emoteUrl)
-	if err != nil {
-		return emote, err
-	}
-
-	emote.Image = emoteBase64
 
 	_, err = file.Write([]byte(emoteBase64))
 	if err != nil {
 		return emote, err
 	}
 
-	if r.database.Insert(emote); err != nil {
+	if err := r.database.Insert(emote); err != nil {
 		return emote, err
 	}
-
-	writer.Close()
 
 	return emote, nil
 }

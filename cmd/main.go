@@ -1,6 +1,10 @@
 package main
 
 import (
+	"log"
+
+	"github.com/gofiber/fiber/v2"
+
 	"chatemotes/internal/api/emotes"
 	"chatemotes/internal/api/hash"
 	"chatemotes/internal/api/pack"
@@ -8,9 +12,6 @@ import (
 	emote_resolver "chatemotes/internal/emote"
 	"chatemotes/internal/resourcepack"
 	"chatemotes/internal/services"
-	"log"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 func run() error {
