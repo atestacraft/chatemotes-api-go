@@ -8,11 +8,12 @@ import (
 	emote_resolver "chatemotes/internal/emote"
 	"chatemotes/internal/resourcepack"
 	"chatemotes/internal/services"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func main() {
+func run() error {
 	app := fiber.New()
 	database := database.New()
 	emoteResolver := emote_resolver.New()
@@ -28,5 +29,11 @@ func main() {
 	emotes.NewRoute(app, services)
 	pack.NewRoute(app)
 
-	app.Listen(":3000")
+	return app.Listen(":3000")
+}
+
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err.Error())
+	}
 }
