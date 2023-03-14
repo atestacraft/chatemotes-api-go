@@ -192,15 +192,23 @@ func (r *ResourcePack) GetEmotes() ([]Emote, error) {
 	return fetchedEmotes, nil
 }
 
-func (r *ResourcePack) GetEmoteByName(name string) (Emote, error) {
-	var fetchedEmote Emote
+func (r *ResourcePack) GetEmoteByName(name string) (*Emote, error) {
+	var emote Emote
 	err := r.
 		emotesTable().
 		Where("name", "=", strings.ToLower(name)).
 		First().
-		AsEntity(&fetchedEmote)
+		AsEntity(&emote)
 
-	return fetchedEmote, xerr.NewW(err)
+	if err != nil {
+		if err.Error() == "record not found" {
+			return nil, nil
+		}
+
+		return nil, xerr.NewW(err)
+	}
+
+	return &emote, nil
 }
 
 func (r *ResourcePack) RemoveEmoteByName(name string) error {

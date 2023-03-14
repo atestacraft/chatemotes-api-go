@@ -64,13 +64,18 @@ func NewRoute(app fiber.Router, services *services.Services) {
 	})
 
 	app.Get("/emotes/:name", func(c *fiber.Ctx) error {
-		response, err := services.ResoucePack.GetEmoteByName(c.Params("name"))
+		emote, err := services.ResoucePack.GetEmoteByName(c.Params("name"))
 		if err != nil {
 			return c.Status(http.StatusNotFound).JSON(fiber.Map{
 				"error": err.Error(),
 			})
 		}
-		return c.JSON(response)
+
+		if emote == nil {
+			return c.SendStatus(http.StatusNotFound)
+		}
+
+		return c.JSON(emote)
 	})
 
 	app.Delete("/emotes/:name", func(c *fiber.Ctx) error {
