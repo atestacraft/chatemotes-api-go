@@ -3,7 +3,6 @@ package api
 import (
 	"chatemotes/internal/api/emotes"
 	"chatemotes/internal/api/hash"
-	"chatemotes/internal/api/pack"
 	"chatemotes/internal/services"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,7 +15,17 @@ func New(services *services.Services) *fiber.App {
 
 	hash.NewRoute(app, services)
 	emotes.NewRoute(app, services)
-	pack.NewRoute(app)
+	app.Static("/pack", "./pack", fiber.Static{
+		Index:          "resourcepack.zip",
+		Download:       true,
+		Compress:       false,
+		ByteRange:      false,
+		Browse:         false,
+		CacheDuration:  0,
+		MaxAge:         0,
+		ModifyResponse: nil,
+		Next:           nil,
+	})
 
 	return app
 }
