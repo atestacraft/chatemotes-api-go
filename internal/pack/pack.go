@@ -62,13 +62,17 @@ func writeMetadata(w *zip.Writer) error {
 	return nil
 }
 
-func (r *Pack) regenerateFile() error {
+func (r *Pack) regenerate() error {
 	log.Println("regenerating pack")
 
 	if _, err := os.Stat("pack"); os.IsNotExist(err) {
 		if err := os.Mkdir("pack", 0755); err != nil {
 			return xerr.NewW(err)
 		}
+	}
+
+	if err := os.Remove(r.filename); err != nil && !os.IsNotExist(err) {
+		return xerr.NewWM(err, "can't remove old pack file")
 	}
 
 	file, err := os.OpenFile(r.filename, os.O_CREATE|os.O_RDWR, 0755)
@@ -121,7 +125,7 @@ func (r *Pack) update() error {
 		return nil
 	}
 
-	return r.regenerateFile()
+	return r.regenerate()
 }
 
 func (r *Pack) Invalidate() {
