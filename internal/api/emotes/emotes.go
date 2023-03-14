@@ -4,6 +4,7 @@ import (
 	"chatemotes/internal/services"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rprtr258/xerr"
 )
 
 type EmoteBody struct {
@@ -13,7 +14,12 @@ type EmoteBody struct {
 
 func NewRoute(app fiber.Router, services *services.Services) {
 	app.Get("/emotes", func(c *fiber.Ctx) error {
-		return c.JSON(services.ResoucePack.GetEmotes())
+		res, err := services.ResoucePack.GetEmotes()
+		if err != nil {
+			return xerr.NewW(err)
+		}
+
+		return c.JSON(res)
 	})
 
 	app.Post("/emotes", func(c *fiber.Ctx) error {

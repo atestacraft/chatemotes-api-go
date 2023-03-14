@@ -15,6 +15,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/rprtr258/xerr"
 	"github.com/sonyarouje/simdb"
 )
 
@@ -172,17 +173,17 @@ func (r *ResourcePack) AddEmote(url string, name string) (*Emote, error) {
 	return emote, nil
 }
 
-func (r *ResourcePack) GetEmotes() []Emote {
+func (r *ResourcePack) GetEmotes() ([]Emote, error) {
 	var fetchedEmotes []Emote
 	err := r.database.
 		Open(Emote{}).
 		Get().
 		AsEntity(&fetchedEmotes)
 	if err != nil && err.Error() != "record not found" {
-		log.Fatal(err.Error())
+		return nil, xerr.NewW(err)
 	}
 
-	return fetchedEmotes
+	return fetchedEmotes, nil
 }
 
 func (r *ResourcePack) GetEmoteByName(name string) (Emote, error) {

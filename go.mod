@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/gofiber/fiber/v2 v2.42.0
+	github.com/rprtr258/xerr v0.0.2
 	github.com/sonyarouje/simdb v0.1.0
 	github.com/stretchr/testify v1.8.2
 )
