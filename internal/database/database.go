@@ -9,9 +9,9 @@ type Emote struct {
 	Image  string   `json:"image"`
 	Type   string   `json:"type"`
 	File   string   `json:"file"`
+	Chars  []string `json:"chars"`
 	Height int      `json:"height"`
 	Ascent int      `json:"ascent"`
-	Chars  []string `json:"chars"`
 }
 
 func (c Emote) ID() string {

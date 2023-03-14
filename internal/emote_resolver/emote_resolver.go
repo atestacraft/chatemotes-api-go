@@ -7,8 +7,8 @@ import (
 
 type emoteResolver struct {
 	regex  *regexp.Regexp
-	index  int
 	imgFmt string
+	index  int
 }
 
 func (r emoteResolver) resolve(url string) (string, bool) {

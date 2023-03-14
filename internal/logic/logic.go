@@ -19,8 +19,8 @@ import (
 )
 
 type Logic struct {
-	db   database.DB
 	pack *pack.Pack
+	db   database.DB
 }
 
 func New(packFilename string, db database.DB) Logic {
