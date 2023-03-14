@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 
 	"chatemotes/internal/api/emotes"
 	"chatemotes/internal/api/hash"
@@ -14,7 +15,6 @@ import (
 )
 
 func run() error {
-	app := fiber.New()
 	database := database.New()
 	resourcepack := resourcepack.New(database)
 
@@ -22,6 +22,9 @@ func run() error {
 		ResoucePack: resourcepack,
 		Database:    database,
 	}
+
+	app := fiber.New()
+	app.Use(logger.New())
 
 	hash.NewRoute(app, services)
 	emotes.NewRoute(app, services)
