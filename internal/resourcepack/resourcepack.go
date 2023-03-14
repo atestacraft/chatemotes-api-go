@@ -86,6 +86,8 @@ func (r *ResourcePack) createWriter() *zip.Writer {
 
 func (r *ResourcePack) addMetadata() {
 	writer := r.createWriter()
+	defer writer.Close()
+
 	file, err := writer.Create("pack.mcmeta")
 	if err != nil {
 		log.Fatal(err.Error())
@@ -103,8 +105,6 @@ func (r *ResourcePack) addMetadata() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-
-	writer.Close()
 }
 
 func (r *ResourcePack) GetHash() string {
