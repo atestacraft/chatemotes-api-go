@@ -6,7 +6,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 
-	"chatemotes/internal/api/hash"
 	"chatemotes/internal/logic"
 )
 
@@ -104,7 +103,14 @@ func New(logic logic.Logic) *fiber.App {
 	app := fiber.New()
 	app.Use(logger.New())
 
-	hash.NewRoute(app, logic)
+	app.Get("/hash", func(c *fiber.Ctx) error {
+		type response struct {
+			Hash string `json:"hash"`
+		}
+		return c.JSON(response{
+			Hash: logic.GetHash(),
+		})
+	})
 	setEmoteRoutes(app, logic)
 	app.Static("/pack", "./pack", fiber.Static{
 		Index:          "resourcepack.zip",
