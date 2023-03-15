@@ -1,32 +1,23 @@
 package main
 
 import (
-	"chatemotes/internal/api/emotes"
-	"chatemotes/internal/api/hash"
-	"chatemotes/internal/api/pack"
-	"chatemotes/internal/database"
-	emote_resolver "chatemotes/internal/emote"
-	"chatemotes/internal/resourcepack"
-	"chatemotes/internal/services"
+	"log"
 
-	"github.com/gofiber/fiber/v2"
+	"chatemotes/internal/api"
+	"chatemotes/internal/database"
+	"chatemotes/internal/logic"
 )
 
-func main() {
-	app := fiber.New()
+var _packFilename = "./pack/resourcepack.zip"
+
+func run() error {
 	database := database.New()
-	emoteResolver := emote_resolver.New()
-	resourcepack := resourcepack.New(database, emoteResolver)
+	logic := logic.New(_packFilename, database)
+	return api.New(logic).Listen(":3000")
+}
 
-	services := &services.Services{
-		ResoucePack:   resourcepack,
-		Database:      database,
-		EmoteResolver: emoteResolver,
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err.Error())
 	}
-
-	hash.NewRoute(app, services)
-	emotes.NewRoute(app, services)
-	pack.NewRoute(app)
-
-	app.Listen(":3000")
 }
