@@ -11,15 +11,8 @@ import (
 
 func setEmoteRoutes(app fiber.Router, logic logic.Logic) {
 	app.Get("/emotes", func(c *fiber.Ctx) error {
-		res, err := logic.GetEmotes()
-		if err != nil {
-			return c.Status(http.StatusInternalServerError).
-				JSON(fiber.Map{
-					"error": err.Error(),
-				})
-		}
-
-		return c.JSON(res)
+		emotes := logic.GetEmotes()
+		return c.JSON(emotes)
 	})
 
 	app.Post("/emotes", func(c *fiber.Ctx) error {
@@ -30,7 +23,7 @@ func setEmoteRoutes(app fiber.Router, logic logic.Logic) {
 		if err := c.BodyParser(&body); err != nil {
 			return c.Status(http.StatusBadRequest).
 				JSON(fiber.Map{
-					"error": err.Error(),
+					"error": err,
 				})
 		}
 
@@ -38,35 +31,35 @@ func setEmoteRoutes(app fiber.Router, logic logic.Logic) {
 		if err != nil {
 			return c.Status(http.StatusInternalServerError).
 				JSON(fiber.Map{
-					"error": err.Error(),
+					"error": err,
 				})
 		}
 
 		return c.JSON(response)
 	})
 
-	// TODO: :name ???
-	app.Patch("/emotes", func(c *fiber.Ctx) error {
+	app.Patch("/emotes/:name", func(c *fiber.Ctx) error {
 		var body struct {
-			Url  string `json:"url"`
-			Name string `json:"name"`
+			Name string `json:"name"` // new emote name
 		}
 		if err := c.BodyParser(&body); err != nil {
 			return c.Status(http.StatusBadRequest).
 				JSON(fiber.Map{
-					"error": err.Error(),
+					"error": err,
 				})
 		}
 
-		response, err := logic.UpdateEmote(body.Name)
+		emoteName := c.Params("name")
+		_, err := logic.GetEmoteByName(emoteName)
 		if err != nil {
 			return c.Status(http.StatusBadRequest).
 				JSON(fiber.Map{
-					"error": err.Error(),
+					"error": err,
 				})
 		}
 
-		return c.JSON(response)
+		logic.UpdateEmote(emoteName, body.Name)
+		return c.JSON(fiber.Map{"success": true})
 	})
 
 	app.Get("/emotes/:name", func(c *fiber.Ctx) error {
@@ -74,12 +67,8 @@ func setEmoteRoutes(app fiber.Router, logic logic.Logic) {
 		if err != nil {
 			return c.Status(http.StatusNotFound).
 				JSON(fiber.Map{
-					"error": err.Error(),
+					"error": err,
 				})
-		}
-
-		if emote == nil {
-			return c.SendStatus(http.StatusNotFound)
 		}
 
 		return c.JSON(emote)
@@ -90,7 +79,7 @@ func setEmoteRoutes(app fiber.Router, logic logic.Logic) {
 		if err != nil {
 			return c.Status(http.StatusInternalServerError).
 				JSON(fiber.Map{
-					"error": err.Error(),
+					"error": err,
 				})
 		}
 		return c.JSON(fiber.Map{

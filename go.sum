@@ -26,8 +26,14 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.4.4 h1:8TfxU8dW6PdqD27gjM8MVNuicgxIjxpm4K7x4jp8sis=
 github.com/rivo/uniseg v0.4.4/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=
+github.com/rprtr258/simpdb v0.3.0 h1:f/m9tbhFEUYTQJKE2NMk2q/uraJUhtZLSAal4Qy0xy4=
+github.com/rprtr258/simpdb v0.3.0/go.mod h1:a0PlEA8jOTKL4WhSxE5b9hAVV2pW0H10/btHrM5J4Uw=
+github.com/rprtr258/simpdb v0.4.0 h1:FLGjQrOPot52vhWVYdU9JKp4o7sUFOxddOcABYLYJ/I=
+github.com/rprtr258/simpdb v0.4.0/go.mod h1:a0PlEA8jOTKL4WhSxE5b9hAVV2pW0H10/btHrM5J4Uw=
 github.com/rprtr258/xerr v0.0.2 h1:FMEqpMgkK2Xs4VkSI34VX1gv4YoXHeGCkZhSUtcke1A=
 github.com/rprtr258/xerr v0.0.2/go.mod h1:+wgm26+rKq3DVCJ9p3HKrl/uifP9mMhKJyjTZOaFaq0=
+github.com/rprtr258/xerr v0.0.3 h1:Eb682VGQoc7A9CI6tijwBxj/dSmpUB8pZMc6CfcV0ms=
+github.com/rprtr258/xerr v0.0.3/go.mod h1:+wgm26+rKq3DVCJ9p3HKrl/uifP9mMhKJyjTZOaFaq0=
 github.com/savsgio/dictpool v0.0.0-20221023140959-7bf2e61cea94 h1:rmMl4fXJhKMNWl+K+r/fq4FbbKI+Ia2m9hYBLm2h4G4=
 github.com/savsgio/dictpool v0.0.0-20221023140959-7bf2e61cea94/go.mod h1:90zrgN3D/WJsDd1iXHT96alCoN2KJo6/4x1DZC3wZs8=
 github.com/savsgio/gotils v0.0.0-20220530130905-52f3993e8d6d/go.mod h1:Gy+0tqhJvgGlqnTF8CVGP0AaGRjwBtXs/a5PA0Y3+A4=
@@ -49,6 +55,8 @@ github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6Kllzaw
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasthttp v1.44.0 h1:R+gLUhldIsfg1HokMuQjdQ5bh9nuXHPIfvkYUu9eR5Q=
 github.com/valyala/fasthttp v1.44.0/go.mod h1:f6VbjjoI3z1NDOZOv17o6RvtRSWxC77seBFc2uWtgiY=
+github.com/valyala/fasthttp v1.45.0 h1:zPkkzpIn8tdHZUrVa6PzYd0i5verqiPSkgTd3bSUcpA=
+github.com/valyala/fasthttp v1.45.0/go.mod h1:k2zXd82h/7UZc3VOdJ2WaUqt1uZ/XpXAfE9i+HBC3lA=
 github.com/valyala/tcplisten v1.0.0 h1:rBHj/Xf+E1tRGZyWIWwJDiRY0zc1Js+CV5DqwacVSA8=
 github.com/valyala/tcplisten v1.0.0/go.mod h1:T0xQ8SeCZGxckz9qRXTfG43PvQ/mcWh7FwZEA7Ioqkc=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

@@ -34,13 +34,20 @@ func New(resourcePackFile string, db database.DB) *Pack {
 var metadataBytes = getMetadataBytes()
 
 func getMetadataBytes() []byte {
-	type metadata struct {
-		Description string `json:"description"`
+	type Metadata struct {
 		PackFormat  int    `json:"pack_format"`
+		Description string `json:"description"`
 	}
-	bytes, err := json.Marshal(metadata{
-		Description: "Chat Emotes",
-		PackFormat:  9,
+
+	type PackMetadata struct {
+		Pack Metadata `json:"pack"`
+	}
+
+	bytes, err := json.Marshal(&PackMetadata{
+		Pack: Metadata{
+			PackFormat:  12,
+			Description: "Chat Emotes",
+		},
 	})
 	if err != nil {
 		log.Fatal(err.Error())
@@ -60,6 +67,26 @@ func writeMetadata(w *zip.Writer) error {
 	}
 
 	return nil
+}
+
+func (r *Pack) writeFont(w *zip.Writer) error {
+	file, err := w.Create("assets/minecraft/font/default.json")
+	if err != nil {
+		return err
+	}
+
+	type Font struct {
+		Providers []database.Emote `json:"providers"`
+	}
+
+	emotes := r.db.GetEmotes()
+	bytes, err := json.Marshal(&Font{Providers: emotes})
+	if err != nil {
+		return err
+	}
+
+	_, err = file.Write(bytes)
+	return err
 }
 
 func (r *Pack) regenerate() error {
@@ -92,11 +119,11 @@ func (r *Pack) regenerate() error {
 		return err
 	}
 
-	emotes, err := r.db.GetEmotes()
-	if err != nil {
-		return xerr.NewWM(err, "can't get emotes list")
+	if err := r.writeFont(w); err != nil {
+		return err
 	}
 
+	emotes := r.db.GetEmotes()
 	for _, emote := range emotes {
 		imageContent := emote.Image[len(ImageBytesPrefix):]
 

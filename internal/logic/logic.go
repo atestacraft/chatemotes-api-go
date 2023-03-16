@@ -3,8 +3,8 @@ package logic
 import (
 	"bytes"
 	"encoding/base64"
-	"errors"
 	"fmt"
+	"html"
 	"image/png"
 	"io"
 	"log"
@@ -71,10 +71,14 @@ func downloadImage(url string) ([]byte, error) {
 	return out.Bytes(), nil
 }
 
+func (r *Logic) getEmojiByIndex(index int32) string {
+	return html.UnescapeString(string(rune(index + 1)))
+}
+
 func (r *Logic) AddEmote(url string, name string) (*database.Emote, error) {
 	imageURL, ok := emote_resolver.EmoteResolver.ResolveUrl(url)
 	if !ok {
-		return nil, errors.New("no match found")
+		return nil, xerr.NewM("no match found url")
 	}
 
 	imageBytes, err := downloadImage(imageURL)
@@ -83,36 +87,35 @@ func (r *Logic) AddEmote(url string, name string) (*database.Emote, error) {
 	}
 
 	imageBase64 := base64.StdEncoding.EncodeToString(imageBytes)
+	char := r.db.GetLastEmoteChar()
+	emojiChar := r.getEmojiByIndex([]rune(char)[0])
 
 	emote := database.Emote{
 		Name:   name,
+		Image:  pack.ImageBytesPrefix + imageBase64,
 		Type:   "bitmap",
 		File:   fmt.Sprintf("minecraft:font/%s.png", name),
 		Height: 10,
 		Ascent: 7,
-		Chars:  []string{"🤙"},
-		Image:  pack.ImageBytesPrefix + imageBase64,
+		Chars:  []string{emojiChar},
 	}
 
-	if err := r.db.Insert(emote); err != nil {
-		return nil, err
-	}
-
+	r.db.Insert(emote)
 	r.pack.Invalidate()
 
 	return &emote, nil
 }
 
-func (r *Logic) GetEmotes() ([]database.Emote, error) {
+func (r *Logic) GetEmotes() []database.Emote {
 	return r.db.GetEmotes()
 }
 
-func (r *Logic) UpdateEmote(name string) (database.Emote, error) {
+func (r *Logic) UpdateEmote(name, newName string) {
 	r.pack.Invalidate()
-	return r.db.UpdateEmote(name)
+	r.db.UpdateEmote(name, newName)
 }
 
-func (r *Logic) GetEmoteByName(name string) (*database.Emote, error) {
+func (r *Logic) GetEmoteByName(name string) (database.Emote, error) {
 	return r.db.GetEmoteByName(name)
 }
 

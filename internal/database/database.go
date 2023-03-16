@@ -1,12 +1,15 @@
 package database
 
 import (
+	"fmt"
+
+	"github.com/rprtr258/simpdb"
 	"github.com/rprtr258/xerr"
 )
 
 type Emote struct {
-	Name   string   `json:"name"`
-	Image  string   `json:"image"`
+	Name   string   `json:"name"`  // ID
+	Image  string   `json:"image"` // Base64
 	Type   string   `json:"type"`
 	File   string   `json:"file"`
 	Chars  []string `json:"chars"`
@@ -15,71 +18,74 @@ type Emote struct {
 }
 
 func (c Emote) ID() string {
-	return c.File
+	return c.Name
 }
 
 type DB struct {
-	dir string
+	table *simpdb.Table[Emote]
 }
 
 func New() DB {
-	return DB{
-		dir: "db",
-	}
-}
-
-func (r DB) GetEmotes() ([]Emote, error) {
-	return read(r, func(Emote) bool { return true })
-}
-
-func (r DB) GetEmoteByName(name string) (*Emote, error) {
-	res, err := read(r, func(emote Emote) bool {
-		return emote.Name == name
+	db := simpdb.New("db")
+	table, err := simpdb.GetTable[Emote](db, "emotes", simpdb.TableConfig{
+		Indent: true,
 	})
 	if err != nil {
-		return nil, xerr.NewW(err)
+		fmt.Println(err)
 	}
+	defer table.Flush()
 
-	switch len(res) {
-	case 0:
-		return nil, nil
-	case 1:
-		return &res[0], nil
-	default:
-		return nil, xerr.NewM("too many records",
-			xerr.Field("name", name),
-			xerr.Field("len(result)", len(res)),
-		)
+	return DB{
+		table: table,
+	}
+}
+
+func (r DB) GetLastEmoteChar() string {
+	emotes := r.table.Sort(func(e1, e2 Emote) bool {
+		return e1.Chars[0] < e2.Chars[0]
+	}).Max()
+
+	if emotes.Valid {
+		return emotes.Value.Chars[0]
+	} else {
+		return string(rune(0x1f45f))
+	}
+}
+
+func (r DB) GetEmotes() []Emote {
+	return r.table.List().All()
+}
+
+func (r DB) GetEmoteByName(name string) (Emote, error) {
+	emote := r.table.Get(name)
+	if emote.Valid {
+		return emote.Value, nil
+	} else {
+		return emote.Value, xerr.NewM("emote not found")
 	}
 }
 
 func (r DB) RemoveEmoteByName(name string) error {
-	all, err := read(r, func(Emote) bool { return true })
-	if err != nil {
-		return xerr.NewW(err)
+	defer r.table.Flush()
+	ok := r.table.DeleteByID(name)
+	if ok {
+		return nil
+	} else {
+		return xerr.NewM("emote not found")
 	}
-
-	res := make([]Emote, 0, len(all))
-	for _, emote := range all {
-		if emote.Name != name {
-			res = append(res, emote)
-		}
-	}
-
-	return write(r, res)
 }
 
-func (r DB) Insert(emote Emote) error {
-	all, err := read(r, func(Emote) bool { return true })
-	if err != nil {
-		return xerr.NewW(err)
-	}
-
-	return write(r, append(all, emote))
+func (r DB) Insert(emote Emote) {
+	defer r.table.Flush()
+	r.table.Upsert(emote)
 }
 
-func (r DB) UpdateEmote(name string) (Emote, error) {
-	// TODO: чего апдейт то нахуй
-	// поменять Name эмоута с Name==name на name?
-	return Emote{}, xerr.NewM("not implemented")
+func (r DB) UpdateEmote(name, newName string) {
+	defer r.table.Flush()
+	r.table.Where(func(id string, emote Emote) bool {
+		return emote.Name == name
+	}).Update(func(emote Emote) Emote {
+		emote.Name = newName
+		return emote
+	})
 }

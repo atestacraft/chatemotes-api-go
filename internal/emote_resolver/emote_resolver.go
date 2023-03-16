@@ -42,7 +42,7 @@ var EmoteResolver = &Resolver{
 		{
 			regex:  regexp.MustCompile(`^https:\/\/betterttv.com\/emotes\/(\w+)`),
 			index:  1,
-			imgFmt: "https://cdn.betterttv.net/emote/%s/2x",
+			imgFmt: "https://cdn.betterttv.net/emote/%s/2x.webp",
 		},
 		{
 			regex:  regexp.MustCompile(`^https:\/\/cdn.betterttv.net\/emote\/(\w+)`),
