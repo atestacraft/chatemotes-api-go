@@ -23,6 +23,18 @@ type Pack struct {
 	isFresh  bool
 }
 
+type EmoteInPack struct {
+	Type   string   `json:"type"`
+	File   string   `json:"file"`
+	Chars  []string `json:"chars"`
+	Height int      `json:"height"`
+	Ascent int      `json:"ascent"`
+}
+
+type EmotesFont struct {
+	Providers *[]EmoteInPack `json:"providers"`
+}
+
 func New(resourcePackFile string, db database.DB) *Pack {
 	return &Pack{
 		db:       db,
@@ -75,12 +87,19 @@ func (r *Pack) writeFont(w *zip.Writer) error {
 		return err
 	}
 
-	type Font struct {
-		Providers []database.Emote `json:"providers"`
+	emotes := r.db.GetEmotes()
+	bytes, err := json.Marshal(emotes)
+	if err != nil {
+		return err
 	}
 
-	emotes := r.db.GetEmotes()
-	bytes, err := json.Marshal(&Font{Providers: emotes})
+	emotesInPack := &[]EmoteInPack{}
+	err = json.Unmarshal(bytes, emotesInPack)
+	if err != nil {
+		return err
+	}
+
+	bytes, err = json.Marshal(&EmotesFont{Providers: emotesInPack})
 	if err != nil {
 		return err
 	}
