@@ -4,11 +4,13 @@ go 1.19
 
 require (
 	github.com/gofiber/fiber/v2 v2.42.0
-	github.com/rprtr258/simpdb v0.4.0
-	github.com/rprtr258/xerr v0.0.3
+	github.com/rprtr258/simpdb v0.5.0
+	github.com/rprtr258/xerr v0.0.4
 	github.com/stretchr/testify v1.8.2
 	github.com/tidbyt/go-libwebp v0.0.0-20220802221933-1fabc3b46601
 )
+
+require go.mongodb.org/mongo-driver v1.11.3 // indirect
 
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect

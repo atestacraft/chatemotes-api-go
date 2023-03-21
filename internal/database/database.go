@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/rprtr258/simpdb"
+	"github.com/rprtr258/simpdb/storages"
 	"github.com/rprtr258/xerr"
 )
 
@@ -27,9 +28,10 @@ type DB struct {
 
 func New() DB {
 	db := simpdb.New("db")
-	table, err := simpdb.GetTable[Emote](db, "emotes", simpdb.TableConfig{
-		Indent: true,
-	})
+	table, err := simpdb.GetTable(
+		db, "emotes",
+		storages.NewJSONIndentStorage[Emote](),
+	)
 	if err != nil {
 		fmt.Println(err)
 	}
